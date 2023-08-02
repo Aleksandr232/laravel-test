@@ -1,0 +1,11 @@
+version: '3'
+services:
+  app:
+    container_name: laravel-test
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
