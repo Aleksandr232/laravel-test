@@ -1,20 +1,27 @@
-# Установка базового образа контейнера
-FROM php:8.1-apache
+FROM php:8.1-fpm
 
-# Установка необходимых расширений PHP
-RUN docker-php-ext-install pdo pdo_mysql
+   WORKDIR /var/www/
 
-# Копирование файлов проекта в контейнер
-COPY . /var/www/html
+   RUN apt-get update && apt-get install -y \
+       curl \
+       libpng-dev \
+       libonig-dev \
+       libxml2-dev \
+       zip \
+       unzip \
+       && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Установка зависимостей Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+   RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Установка Composer-зависимостей проекта
-RUN composer install --ignore-platform-reqs
+   COPY . .
 
-# Установка прав на папку storage/ и bootstrap/
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap
+   RUN composer install
 
-# Указание рабочей директории
-WORKDIR /var/www/html
+   RUN cp .env.example .env
+   RUN php artisan key:generate
+
+   RUN php artisan optimize
+
+   EXPOSE 9000
+
+   CMD ["php-fpm"]
